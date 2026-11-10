@@ -1,0 +1,2011 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Logic Exam</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .font-mono-code {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .glass-card {
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+    .glass-card-subtle {
+      background: rgba(30, 41, 59, 0.6);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.6);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(99, 102, 241, 0.5);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(99, 102, 241, 0.8);
+    }
+    @keyframes pulse-border {
+      0%, 100% { border-color: rgba(239, 68, 68, 0.4); }
+      50% { border-color: rgba(239, 68, 68, 1); }
+    }
+    .cheating-glow {
+      animation: pulse-border 1.2s infinite;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 text-slate-100 flex flex-col antialiased selection:bg-indigo-500 selection:text-white">
+
+  <!-- Fullscreen Prohibited Warning Modal -->
+  <div id="violation-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 hidden">
+    <div class="glass-card max-w-md w-full p-6 rounded-2xl border-red-500/50 shadow-2xl cheating-glow text-center">
+      <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center text-3xl font-bold">
+        ⚠️
+      </div>
+      <h3 class="text-xl font-bold text-red-400 mb-2">CẢNH BÁO VI PHẠM QUY CHẾ</h3>
+      <p id="violation-reason" class="text-sm text-slate-300 mb-4 leading-relaxed">
+        Phát hiện hành vi rời màn hình bài thi hoặc phím tắt bị cấm.
+      </p>
+      <div class="bg-red-950/60 border border-red-800/60 rounded-xl p-3 mb-5 text-sm">
+        <span class="text-red-300 font-medium">Số lần vi phạm:</span>
+        <span id="violation-count-badge" class="font-bold text-red-400 text-base">0</span>
+        <p class="text-xs text-red-300/80 mt-1">Mỗi vi phạm sẽ tự động trừ 10% tổng điểm bài thi!</p>
+      </div>
+      <button id="resume-exam-btn" class="w-full py-3 px-4 bg-gradient-to-r from-red-600 to-indigo-600 hover:from-red-500 hover:to-indigo-500 text-white font-semibold rounded-xl transition duration-200 shadow-lg shadow-red-900/40">
+        Tôi Đã Hiểu & Quay Lại Toàn Màn Hình
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Container -->
+  <main class="flex-1 flex flex-col relative w-full h-full p-3 sm:p-6 md:p-8 max-w-7xl mx-auto">
+    
+    <!-- HEADER -->
+    <header class="flex items-center justify-between pb-4 border-b border-white/10 mb-6">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-500/30 text-white font-bold text-xl">
+          ∀
+        </div>
+        <div>
+          <h1 class="text-lg md:text-xl font-extrabold tracking-tight bg-gradient-to-r from-indigo-300 via-white to-purple-300 bg-clip-text text-transparent">
+            Logic Reasoning Assessment
+          </h1>
+          <p class="text-xs text-indigo-300/70">Propositional Logic & First-Order Logic</p>
+        </div>
+      </div>
+      
+      <div id="exam-stats-bar" class="hidden flex items-center space-x-3">
+        <div class="bg-indigo-950/70 border border-indigo-700/50 px-3 py-1.5 rounded-lg text-xs flex items-center space-x-2">
+          <span class="text-slate-400">Thí sinh:</span>
+          <span id="display-student-name" class="font-semibold text-indigo-300 truncate max-w-[120px]">--</span>
+        </div>
+        <div class="bg-red-950/70 border border-red-700/50 px-3 py-1.5 rounded-lg text-xs flex items-center space-x-2">
+          <span class="text-slate-400">Vi phạm:</span>
+          <span id="display-violation-count" class="font-bold text-red-400">0</span>
+        </div>
+        <div class="bg-emerald-950/70 border border-emerald-700/50 px-3 py-1.5 rounded-lg text-xs flex items-center space-x-2">
+          <span class="text-slate-400">Tiến độ:</span>
+          <span id="display-progress-ratio" class="font-bold text-emerald-400">0/40</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- SCREEN 1: LOGIN & REGISTRATION -->
+    <section id="screen-start" class="flex-1 flex items-center justify-center py-6">
+      <div class="glass-card max-w-xl w-full p-6 sm:p-8 rounded-3xl shadow-2xl relative overflow-hidden">
+        <div class="absolute -top-24 -right-24 w-48 h-48 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -bottom-24 -left-24 w-48 h-48 bg-purple-500/20 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="mb-6 text-center">
+          <span class="px-3 py-1 text-xs font-semibold uppercase tracking-wider text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 rounded-full">
+            Biểu diễn Tri Thức & Suy Diễn
+          </span>
+          <h2 class="text-2xl sm:text-3xl font-black mt-3 mb-2 text-white">Logic mệnh đề và Logic vị từ cấp 1</h2>
+          <p class="text-xs sm:text-sm text-slate-300">
+            Ngân hàng 80 câu học phần • Rút ngẫu nhiên 40 câu cân bằng (20 Mệnh đề + 20 Vị từ cấp 1).
+          </p>
+        </div>
+
+        <!-- Rules notice -->
+        <div class="glass-card-subtle p-4 rounded-2xl mb-6 space-y-2 text-xs text-slate-300 border border-indigo-500/20">
+          <div class="font-bold text-indigo-300 flex items-center gap-1.5 text-sm">
+            🛡️ Quy Chế Thi:
+          </div>
+          <ul class="list-disc list-inside space-y-1 text-slate-400">
+            <li>Bắt buộc bật chế độ <strong class="text-slate-200">Toàn màn hình (Fullscreen)</strong> trong suốt bài thi.</li>
+            <li>Nghiêm cấm: Chuyển tab, thu nhỏ cửa sổ, mở DevTools, bấm Esc, F11, Alt+Tab, Windows, Copy/Paste.</li>
+            <li><strong class="text-red-400">Mỗi hành vi thoát/mất tiêu điểm: Phạt trừ 10% tổng điểm bài thi.</strong></li>
+            <li>Giới hạn: <strong class="text-amber-400">Tối đa 02 lượt làm bài trên mỗi thiết bị</strong>.</li>
+          </ul>
+          <div class="mt-2 pt-2 border-t border-white/10 flex justify-between items-center text-xs">
+            <span class="text-slate-400">Số lượt đã làm bài của thiết bị:</span>
+            <span id="attempt-info-badge" class="font-bold px-2 py-0.5 rounded bg-indigo-900/80 text-indigo-300">0 / 2</span>
+          </div>
+        </div>
+
+        <form id="start-form" class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Họ và Tên Sinh Viên *</label>
+            <input type="text" id="input-student-name" required placeholder="Ví dụ: Nguyễn Văn An"
+              class="w-full px-4 py-3 bg-slate-900/80 border border-slate-700 rounded-xl text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition text-sm">
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Mã Số Sinh Viên / Lớp *</label>
+            <input type="text" id="input-student-id" required placeholder="Ví dụ: 21IT001 - KTPM01"
+              class="w-full px-4 py-3 bg-slate-900/80 border border-slate-700 rounded-xl text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition text-sm">
+          </div>
+
+          <div id="device-locked-alert" class="hidden p-3 rounded-xl bg-red-950/80 border border-red-700/80 text-red-300 text-xs text-center font-medium">
+            Thiết bị này đã sử dụng hết 2 lượt làm bài cho phép!
+          </div>
+
+          <button type="submit" id="btn-start-exam"
+            class="w-full py-3.5 px-4 bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold rounded-xl transition duration-200 shadow-xl shadow-indigo-600/30 flex items-center justify-center gap-2 group text-sm">
+            <span>Bắt Đầu Làm Bài (Vào Fullscreen)</span>
+            <svg class="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+            </svg>
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <!-- SCREEN 2: EXAM TESTING VIEW -->
+    <section id="screen-exam" class="hidden flex-1 flex flex-col lg:flex-row gap-6 relative">
+      <!-- Question Content Area -->
+      <div class="flex-1 flex flex-col justify-between glass-card p-6 rounded-3xl shadow-xl min-h-[500px]">
+        <div>
+          <!-- Meta Header for Question -->
+          <div class="flex flex-wrap items-center justify-between gap-2 pb-4 border-b border-white/10 mb-5">
+            <div class="flex items-center space-x-2">
+              <span id="question-index-tag" class="px-3 py-1 rounded-lg bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 font-extrabold text-sm">
+                Question 01/40
+              </span>
+              <span id="question-topic-tag" class="px-2.5 py-1 rounded-lg bg-purple-500/10 border border-purple-500/20 text-purple-300 text-xs font-semibold">
+                Propositional Logic
+              </span>
+            </div>
+            <span id="question-type-tag" class="text-xs text-slate-400 font-mono-code px-2 py-0.5 rounded bg-slate-800 border border-slate-700">
+              Multiple Choice
+            </span>
+          </div>
+
+          <!-- Question Prompt -->
+          <div id="question-body-container">
+            <h3 id="question-prompt" class="text-base sm:text-lg font-semibold text-slate-100 leading-relaxed mb-4">
+              --
+            </h3>
+            <div id="question-interactive-container" class="space-y-3">
+              <!-- Dynamically populated choices / input / matching -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Navigation Buttons -->
+        <div class="flex items-center justify-between pt-6 border-t border-white/10 mt-8">
+          <button id="btn-prev-q" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-xs sm:text-sm font-semibold transition flex items-center gap-1.5 disabled:opacity-30 disabled:pointer-events-none">
+            ← Previous
+          </button>
+          
+          <div class="flex items-center gap-2">
+            <button id="btn-flag-q" class="px-3 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-semibold transition flex items-center gap-1">
+              <span>⚐</span> <span class="hidden sm:inline">Flag</span>
+            </button>
+            <button id="btn-submit-exam" class="px-5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs sm:text-sm transition shadow-lg shadow-emerald-900/30">
+              Nộp Bài Thi
+            </button>
+          </div>
+
+          <button id="btn-next-q" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs sm:text-sm font-semibold transition flex items-center gap-1.5 disabled:opacity-30 disabled:pointer-events-none shadow-md shadow-indigo-700/30">
+            Next →
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Question Selector Sidebar -->
+      <aside class="w-full lg:w-72 glass-card p-5 rounded-3xl flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-4">
+            <h4 class="font-bold text-slate-200 text-sm">Question Matrix</h4>
+            <span class="text-xs text-slate-400">40 Questions</span>
+          </div>
+
+          <!-- Color Legends -->
+          <div class="grid grid-cols-3 gap-1.5 text-[10px] text-slate-300 mb-4 pb-3 border-b border-white/10">
+            <div class="flex items-center gap-1">
+              <span class="w-2.5 h-2.5 rounded-sm bg-indigo-600"></span>
+              <span>Answered</span>
+            </div>
+            <div class="flex items-center gap-1">
+              <span class="w-2.5 h-2.5 rounded-sm bg-slate-800 border border-slate-600"></span>
+              <span>Empty</span>
+            </div>
+            <div class="flex items-center gap-1">
+              <span class="w-2.5 h-2.5 rounded-sm bg-amber-500"></span>
+              <span>Flagged</span>
+            </div>
+          </div>
+
+          <!-- Grid of Buttons -->
+          <div id="question-matrix-grid" class="grid grid-cols-5 gap-2 max-h-72 overflow-y-auto pr-1">
+            <!-- 40 buttons will be generated -->
+          </div>
+        </div>
+
+        <div class="mt-6 pt-4 border-t border-white/10 text-center">
+          <p class="text-[11px] text-slate-400 mb-2">Anti-cheat active • Focus locked</p>
+          <div class="text-xs font-mono-code text-indigo-300 bg-indigo-950/60 p-2 rounded-xl border border-indigo-800/40">
+            Exam Mode: Strict
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <!-- SCREEN 3: RESULTS & SCORE ANALYSIS -->
+    <section id="screen-result" class="hidden flex-1 flex flex-col max-w-4xl mx-auto w-full py-6">
+      <div class="glass-card p-6 sm:p-8 rounded-3xl shadow-2xl mb-8">
+        <div class="text-center mb-6">
+          <span class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 uppercase tracking-wider">
+            Exam Completed
+          </span>
+          <h2 class="text-2xl sm:text-3xl font-black text-white mt-3">KẾT QUẢ BÀI THI LOGIC AI</h2>
+          <p id="result-student-header" class="text-sm text-slate-300 mt-1">Thí sinh: -- (--) </p>
+        </div>
+
+        <!-- Metric Stat Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-8">
+          <div class="glass-card-subtle p-4 rounded-2xl text-center border border-indigo-500/20">
+            <span class="text-xs text-slate-400 block mb-1">Điểm Thô (Đúng)</span>
+            <span id="stat-raw-score" class="text-xl sm:text-2xl font-black text-indigo-400">0/40</span>
+            <span id="stat-raw-pct" class="text-[11px] block text-slate-400">0%</span>
+          </div>
+
+          <div class="glass-card-subtle p-4 rounded-2xl text-center border border-red-500/20">
+            <span class="text-xs text-slate-400 block mb-1">Số Lần Vi Phạm</span>
+            <span id="stat-violations" class="text-xl sm:text-2xl font-black text-red-400">0</span>
+            <span class="text-[11px] block text-red-400/80">Quy chế thi</span>
+          </div>
+
+          <div class="glass-card-subtle p-4 rounded-2xl text-center border border-amber-500/20">
+            <span class="text-xs text-slate-400 block mb-1">Khấu Trừ Vi Phạm</span>
+            <span id="stat-deduction" class="text-xl sm:text-2xl font-black text-amber-400">-0%</span>
+            <span class="text-[11px] block text-slate-400">10% / lần</span>
+          </div>
+
+          <div class="glass-card-subtle p-4 rounded-2xl text-center border border-emerald-500/20 bg-emerald-950/20">
+            <span class="text-xs text-slate-300 block mb-1">ĐIỂM CUỐI CÙNG</span>
+            <span id="stat-final-score" class="text-2xl sm:text-3xl font-black text-emerald-400">0.0</span>
+            <span class="text-[11px] block text-emerald-300/80">Thang điểm 10</span>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex flex-wrap items-center justify-center gap-4">
+          <button id="btn-retry-exam" class="py-3 px-6 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-sm shadow-xl shadow-indigo-600/30 transition disabled:opacity-40 disabled:pointer-events-none">
+            🔄 Làm Lại Bài Thi (<span id="retry-remaining-badge">1</span> lượt còn lại)
+          </button>
+          <button id="btn-toggle-review" class="py-3 px-6 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 font-bold text-sm transition">
+            📖 Xem Chi Tiết Đáp Án & Giải Thích
+          </button>
+        </div>
+      </div>
+
+      <!-- Question Review Container -->
+      <div id="review-section" class="hidden space-y-4">
+        <h3 class="text-lg font-bold text-indigo-300 flex items-center gap-2">
+          <span>Chi Tiết 40 Câu Hỏi Đã Làm</span>
+        </h3>
+        <div id="review-questions-list" class="space-y-4">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    /* =====================================================================
+       80 COMPREHENSIVE AI LOGIC QUESTIONS IN ENGLISH
+       - 40 Questions: Propositional Logic (id: 1 - 40)
+       - 40 Questions: First-Order Logic (id: 41 - 80)
+       Includes Single Choice, Fill-in-the-blank, Matching, and True/False.
+    ===================================================================== */
+    const QUESTION_BANK = [
+      // -------------------------------------------------------------
+      // TOPIC 1: PROPOSITIONAL LOGIC (40 QUESTIONS)
+      // -------------------------------------------------------------
+      {
+        id: 1,
+        topic: "Propositional Logic",
+        type: "single",
+        prompt: "According to the lecture, what is the precise definition of a proposition in logic?",
+        options: [
+          "A declarative sentence that is either True or False, but cannot be both simultaneously.",
+          "An imperative command given to an intelligent agent.",
+          "An algebraic expression containing unknown continuous real variables.",
+          "A query that asks whether a given goal state is reachable."
+        ],
+        answer: 0,
+        explanation: "A proposition is defined as a declarative statement that is strictly True or False (bivalent logic)."
+      },
+      {
+        id: 2,
+        topic: "Propositional Logic",
+        type: "single",
+        prompt: "Under what specific condition does the implication P ⇒ Q evaluate to False?",
+        options: [
+          "When P is False and Q is True.",
+          "When both P and Q are False.",
+          "Only when P is True and Q is False.",
+          "When both P and Q are True."
+        ],
+        answer: 2,
+        explanation: "P ⇒ Q is false if and only if the premise P is True and the consequence Q is False."
+      },
+      {
+        id: 3,
+        topic: "Propositional Logic",
+        type: "single",
+        prompt: "What is the standard order of operator precedence in propositional logic (from highest to lowest)?",
+        options: [
+          "¬  >  (∧, ∨)  >  ⇒  >  ⇔",
+          "⇒  >  ⇔  >  ¬  >  (∧, ∨)",
+          "(∧, ∨)  >  ¬  >  ⇒  >  ⇔",
+          "⇔  >  ⇒  >  (∧, ∨)  >  ¬"
+        ],
+        answer: 0,
+        explanation: "Operator precedence order is: Negation (¬) highest, then Conjunction/Disjunction (∧, ∨), followed by Implication (⇒), and finally Equivalence (⇔)."
+      },
+      {
+        id: 4,
+        topic: "Propositional Logic",
+        type: "single",
+        prompt: "According to De Morgan's Law, what is the logically equivalent expression for ¬(P ∧ Q)?",
+        options: [
+          "¬P ∧ ¬Q",
+          "¬P ∨ ¬Q",
+          "P ∨ Q",
+          "¬P ⇒ Q"
+        ],
+        answer: 1,
+        explanation: "De Morgan's law states ¬(P ∧ Q) ≡ ¬P ∨ ¬Q and ¬(P ∨ Q) ≡ ¬P ∧ ¬Q."
+      },
+      {
+        id: 5,
+        topic: "Propositional Logic",
+        type: "single",
+        prompt: "What does Conjunctive Normal Form (CNF) represent in automated reasoning?",
+        options: [
+          "A disjunction of conjunctions.",
+          "A conjunction of clauses, where each clause is a disjunction of literals.",
+          "A nested implication chain with no negations.",
+          "A set of Horn clauses restricted to having zero positive literals."
+        ],
+        answer: 1,
+        explanation: "CNF (Conjunctive Normal Form) is a conjunction of one or more clauses, where each clause is a disjunction of literals: (L1 ∨ L2) ∧ (L3 ∨ ...)."
+      },
+      {
+        id: 6,
+        topic: "Propositional Logic",
+        type: "single",
+        prompt: "What is a 'literal' in propositional calculus?",
+        options: [
+          "A propositional variable or its direct negation (e.g., P or ¬P).",
+          "A complete truth table with 2^n entries.",
+          "An inference rule containing two premises.",
+          "A formula with at least two distinct connective operators."
+        ],
+        answer: 0,
+        explanation: "A literal is an atomic proposition (e.g., A) or its negation (¬A)."
+      },
+      {
+        id: 7,
+        topic: "Propositional Logic",
+        type: "single",
+        prompt: "Applying the resolution rule to the two clauses (A ∨ ¬B) and (C ∨ B) results in which resolvent clause?",
+        options: [
+          "A ∨ C",
+          "¬B ∨ B",
+          "A ∧ C",
+          "¬A ∨ ¬C"
+        ],
+        answer: 0,
+        explanation: "The complementary pair (B and ¬B) cancels out, leaving the disjunction of remaining literals: A ∨ C."
+      },
+      {
+        id: 8,
+        topic: "Propositional Logic",
+        type: "single",
+        prompt: "In a Refutation Proof (Chứng minh bác bỏ) to establish KB ⊢ α, what statement is added to the Knowledge Base (KB)?",
+        options: [
+          "α (the goal itself)",
+          "¬α (the negation of the goal)",
+          "KB ∨ α",
+          "An empty clause □ directly"
+        ],
+        answer: 1,
+        explanation: "Refutation proof adds the negation of the goal (¬α) to the KB and seeks to derive a contradiction (empty clause □)."
+      },
+      {
+        id: 9,
+        topic: "Propositional Logic",
+        type: "single",
+        prompt: "Deriving an empty clause (denoted as □ or []) during resolution refutation demonstrates that:",
+        options: [
+          "The set of clauses is unsatisfiable (contradiction), hence the original goal is proven true.",
+          "The Knowledge Base is incomplete and cannot reach a conclusion.",
+          "The original goal is invalid and false.",
+          "There are no more literals available in the universe."
+        ],
+        answer: 0,
+        explanation: "Deriving the empty clause means the augmented KB is unsatisfiable, proving KB ⊢ α."
+      },
+      {
+        id: 10,
+        topic: "Propositional Logic",
+        type: "single",
+        prompt: "Which classic inference rule states: From 'P ⇒ Q' and 'P', derive 'Q'?",
+        options: [
+          "Modus Tollens",
+          "Modus Ponens",
+          "Hypothetical Syllogism",
+          "Disjunctive Syllogism"
+        ],
+        answer: 1,
+        explanation: "Modus Ponens is the affirmation of the antecedent: {P ⇒ Q, P} ⊢ Q."
+      },
+      {
+        id: 11,
+        topic: "Propositional Logic",
+        type: "single",
+        prompt: "Which inference rule states: From 'P ⇒ Q' and '¬Q', derive '¬P'?",
+        options: [
+          "Modus Tollens",
+          "Modus Ponens",
+          "Resolution",
+          "Conjunction Introduction"
+        ],
+        answer: 0,
+        explanation: "Modus Tollens denies the consequent: {P ⇒ Q, ¬Q} ⊢ ¬P."
+      },
+      {
+        id: 12,
+        topic: "Propositional Logic",
+        type: "single",
+        prompt: "What does the 'Set of Support' (SOS) resolution strategy mandate?",
+        options: [
+          "Every resolution step must involve at least one clause derived from the negated goal or its descendants.",
+          "Only clauses containing exactly one literal can be resolved.",
+          "Clauses must be resolved in alphabetical order of their literals.",
+          "Resolutions must never use any premise from the original KB."
+        ],
+        answer: 0,
+        explanation: "Set of Support (SOS) prevents resolving axioms against axioms; it insists that at least one parent comes from the negated goal set."
+      },
+      {
+        id: 13,
+        topic: "Propositional Logic",
+        type: "single",
+        prompt: "What does the 'Unit Preference' strategy prioritize during resolution?",
+        options: [
+          "Resolving with unit clauses (clauses with a single literal) first to shorten clauses quickly.",
+          "Resolving clauses that have the largest number of literals first.",
+          "Ignoring all negated literals until the very end.",
+          "Eliminating tautologies prior to any derivation."
+        ],
+        answer: 0,
+        explanation: "Unit Preference selects unit clauses (length 1) to derive resolvents that are shorter and closer to the empty clause."
+      },
+      {
+        id: 14,
+        topic: "Propositional Logic",
+        type: "single",
+        prompt: "What is the result of transforming the formula (P ⇒ Q) into equivalent disjunctive form?",
+        options: [
+          "¬P ∨ Q",
+          "P ∨ ¬Q",
+          "¬P ∧ Q",
+          "¬P ∨ ¬Q"
+        ],
+        answer: 0,
+        explanation: "By the material implication equivalence, (P ⇒ Q) ≡ ¬P ∨ Q."
+      },
+      {
+        id: 15,
+        topic: "Propositional Logic",
+        type: "single",
+        prompt: "The equivalence law P ∧ (Q ∨ R) ≡ (P ∧ Q) ∨ (P ∧ R) represents which mathematical rule?",
+        options: [
+          "Associative Law",
+          "Distributive Law",
+          "Commutative Law",
+          "Complement Law"
+        ],
+        answer: 1,
+        explanation: "This is the Distributive Law of conjunction over disjunction."
+      },
+      {
+        id: 16,
+        topic: "Propositional Logic",
+        type: "single",
+        prompt: "Convert the sentence: (A ∨ B) ⇒ (C ⇒ D) into CNF. What is the correct resulting set of clauses?",
+        options: [
+          "(¬A ∨ ¬C ∨ D) ∧ (¬B ∨ ¬C ∨ D)",
+          "(A ∨ ¬C ∨ D) ∧ (B ∨ ¬C ∨ D)",
+          "(¬A ∧ ¬B) ∨ (¬C ∨ D)",
+          "(A ∨ B) ∧ (C ∨ D)"
+        ],
+        answer: 0,
+        explanation: "(A ∨ B) ⇒ (¬C ∨ D) ≡ ¬(A ∨ B) ∨ (¬C ∨ D) ≡ (¬A ∧ ¬B) ∨ (¬C ∨ D) ≡ (¬A ∨ ¬C ∨ D) ∧ (¬B ∨ ¬C ∨ D)."
+      },
+      {
+        id: 17,
+        topic: "Propositional Logic",
+        type: "single",
+        prompt: "Which of the following problems can be formulated and solved directly as a Propositional Satisfiability (SAT) problem?",
+        options: [
+          "Sudoku puzzle solving and Map Coloring",
+          "Continuous differential equation integration",
+          "Real-time video compression codec design",
+          "Unbounded natural language speech generation"
+        ],
+        answer: 0,
+        explanation: "Sudoku, timetable scheduling, and map coloring are classic constraint satisfaction problems easily encoded as SAT in CNF."
+      },
+      {
+        id: 18,
+        topic: "Propositional Logic",
+        type: "single",
+        prompt: "In digital circuit design, physical logic gates (AND, OR, NOT) in microprocessors are an engineering implementation of:",
+        options: [
+          "Propositional logic truth-functional operators",
+          "Higher-order modal temporal logic",
+          "Analog fuzzy membership gradients",
+          "Probabilistic Bayesian networks"
+        ],
+        answer: 0,
+        explanation: "Digital logic gates directly realize propositional operations (Boolean logic)."
+      },
+      {
+        id: 19,
+        topic: "Propositional Logic",
+        type: "single",
+        prompt: "What is the truth value of P ∨ ¬P under classical bivalent logic?",
+        options: [
+          "Always True (Tautology / Law of Excluded Middle)",
+          "Always False (Contradiction)",
+          "Depends on the assignment of P",
+          "Undefined"
+        ],
+        answer: 0,
+        explanation: "P ∨ ¬P is the Law of Excluded Middle, which is always True (tautology)."
+      },
+      {
+        id: 20,
+        topic: "Propositional Logic",
+        type: "single",
+        prompt: "What is the truth value of the formula P ∧ ¬P?",
+        options: [
+          "Always False (Contradiction / Self-inconsistent)",
+          "Always True",
+          "Contingent upon external facts",
+          "Satisfiable but not valid"
+        ],
+        answer: 0,
+        explanation: "P ∧ ¬P is a contradiction, evaluating to False under every possible interpretation."
+      },
+      {
+        id: 21,
+        topic: "Propositional Logic",
+        type: "single",
+        prompt: "A Knowledge Base (KB) contains: { P, P ⇒ Q, Q ⇒ R }. Using Modus Ponens twice, what can we infer?",
+        options: [
+          "R",
+          "¬R",
+          "¬P",
+          "P ∧ ¬Q"
+        ],
+        answer: 0,
+        explanation: "1) P and P ⇒ Q yield Q. 2) Q and Q ⇒ R yield R."
+      },
+      {
+        id: 22,
+        topic: "Propositional Logic",
+        type: "single",
+        prompt: "In the Linear Resolution strategy, what is the defining structural property?",
+        options: [
+          "Each step resolves the clause obtained in the immediately preceding step with a center or input clause.",
+          "Clauses must contain only positive literals.",
+          "Resolution is performed along an acyclic tree with parallel branches.",
+          "Only two-literal clauses are permitted."
+        ],
+        answer: 0,
+        explanation: "Linear resolution generates a linear sequence of resolvents, using the most recent resolvent as a parent in the next step."
+      },
+      {
+        id: 23,
+        topic: "Propositional Logic",
+        type: "single",
+        prompt: "In model checking and software verification, SAT solvers are primarily used to:",
+        options: [
+          "Verify the absence of race conditions, deadlocks, and invariant violations in code.",
+          "Increase the clock frequency of the processor.",
+          "Synthesize human speech waveforms.",
+          "Format source code indentation."
+        ],
+        answer: 0,
+        explanation: "Model checkers use SAT/SMT solvers to prove software safety properties and uncover bugs/deadlocks."
+      },
+      {
+        id: 24,
+        topic: "Propositional Logic",
+        type: "single",
+        prompt: "What does the simplification rule 'p ∧ q ⊢ p' represent?",
+        options: [
+          "If a conjunction is true, either of its conjuncts is individually true.",
+          "If one conjunct is true, the conjunction is true.",
+          "Negating a conjunction yields a conjunct.",
+          "Two propositions cannot both be true."
+        ],
+        answer: 0,
+        explanation: "Simplification allows inferring an individual conjunct from a true conjunction."
+      },
+      {
+        id: 25,
+        topic: "Propositional Logic",
+        type: "single",
+        prompt: "What does the Addition rule 'p ⊢ p ∨ q' allow in logical deduction?",
+        options: [
+          "From any true proposition p, one can validly infer the disjunction of p with any proposition q.",
+          "From p and q, infer p + q.",
+          "From p ∨ q, infer p.",
+          "From ¬p, infer q."
+        ],
+        answer: 0,
+        explanation: "Addition rule states that if p is True, then (p ∨ q) is guaranteed to be True for any proposition q."
+      },
+      // Propositional Logic - True/False & Fill-in & Matching (26 - 40)
+      {
+        id: 26,
+        topic: "Propositional Logic",
+        type: "tf",
+        prompt: "True or False: The biconditional statement P ⇔ Q is True whenever P and Q have identical truth values.",
+        options: ["True", "False"],
+        answer: 0,
+        explanation: "P ⇔ Q is True when both are True or both are False."
+      },
+      {
+        id: 27,
+        topic: "Propositional Logic",
+        type: "tf",
+        prompt: "True or False: In a refutation proof, if no new clauses can be generated and the empty clause has NOT been reached, the goal is proven true.",
+        options: ["True", "False"],
+        answer: 1,
+        explanation: "If no empty clause is derived and no new clauses can be formed, the KB does NOT entail the goal (H is not proven)."
+      },
+      {
+        id: 28,
+        topic: "Propositional Logic",
+        type: "tf",
+        prompt: "True or False: The clause (A ∨ B ∨ ¬C) is an example of a disjunction of literals.",
+        options: ["True", "False"],
+        answer: 0,
+        explanation: "Yes, a clause in CNF is strictly a disjunction of literals."
+      },
+      {
+        id: 29,
+        topic: "Propositional Logic",
+        type: "tf",
+        prompt: "True or False: P ⇒ Q is logically equivalent to its contrapositive ¬Q ⇒ ¬P.",
+        options: ["True", "False"],
+        answer: 0,
+        explanation: "A conditional and its contrapositive have identical truth values in classical logic."
+      },
+      {
+        id: 30,
+        topic: "Propositional Logic",
+        type: "tf",
+        prompt: "True or False: The rule P ∧ True ≡ P is an identity rule in propositional logic.",
+        options: ["True", "False"],
+        answer: 0,
+        explanation: "Conjoining any proposition with True preserves its truth value (P ∧ True ≡ P)."
+      },
+      {
+        id: 31,
+        topic: "Propositional Logic",
+        type: "fill",
+        prompt: "Fill in the blank: What is the acronym for Conjunctive Normal Form used universally in automated theorem proving?",
+        accepted: ["CNF"],
+        explanation: "CNF stands for Conjunctive Normal Form."
+      },
+      {
+        id: 32,
+        topic: "Propositional Logic",
+        type: "fill",
+        prompt: "Fill in the blank: The Latin name for the inference rule 'p ⇒ q, ¬q ⊢ ¬p' is Modus ______.",
+        accepted: ["tollens", "tollens."],
+        explanation: "Modus Tollens derives ¬p from p ⇒ q and ¬q."
+      },
+      {
+        id: 33,
+        topic: "Propositional Logic",
+        type: "fill",
+        prompt: "Fill in the blank: When resolving (P ∨ Q) and (¬P), the resulting single-literal resolvent clause is ______.",
+        accepted: ["Q"],
+        explanation: "P and ¬P cancel out, leaving Q."
+      },
+      {
+        id: 34,
+        topic: "Propositional Logic",
+        type: "fill",
+        prompt: "Fill in the blank: In refutation proof, deriving the empty clause denoted by a small box symbolizes a logical ______ (contradiction / tautology).",
+        accepted: ["contradiction", "mau thuan"],
+        explanation: "Deriving an empty clause signifies a contradiction in the negated-goal knowledge base."
+      },
+      {
+        id: 35,
+        topic: "Propositional Logic",
+        type: "fill",
+        prompt: "Fill in the blank: An expert system uses IF-THEN rules. In propositional logic, IF P THEN Q is represented by the logical ______ operator.",
+        accepted: ["implication", "conditional", "keo theo"],
+        explanation: "IF-THEN represents logical implication (⇒)."
+      },
+      {
+        id: 36,
+        topic: "Propositional Logic",
+        type: "matching",
+        prompt: "Match each logical rule name with its symbolic expression:",
+        pairs: [
+          { item: "Modus Ponens", match: "p→q, p ⊢ q" },
+          { item: "Modus Tollens", match: "p→q, ¬q ⊢ ¬p" },
+          { item: "Hypothetical Syllogism", match: "p→q, q→r ⊢ p→r" },
+          { item: "Resolution Rule", match: "A∨B, ¬B∨C ⊢ A∨C" }
+        ],
+        explanation: "These are the fundamental propositional inference rules from Slide 12-13."
+      },
+      {
+        id: 37,
+        topic: "Propositional Logic",
+        type: "matching",
+        prompt: "Match each logic term with its formal definition:",
+        pairs: [
+          { item: "Clause", match: "Disjunction of literals" },
+          { item: "Literal", match: "Atomic variable or its negation" },
+          { item: "Empty Clause", match: "Symbol of contradiction" },
+          { item: "Tautology", match: "Always True in all truth assignments" }
+        ],
+        explanation: "Key structural concepts of CNF and resolution logic."
+      },
+      {
+        id: 38,
+        topic: "Propositional Logic",
+        type: "single",
+        prompt: "Why can't Propositional Logic scale cleanly to express 'Every human is mortal' without a massive set of clauses?",
+        options: [
+          "It lacks objects, relations, and quantifiers over individuals.",
+          "It does not support the implication operator.",
+          "Truth tables cannot handle more than 2 variables.",
+          "De Morgan's laws do not apply to humans."
+        ],
+        answer: 0,
+        explanation: "Propositional logic treats whole sentences as black boxes without internal subject-predicate structure."
+      },
+      {
+        id: 39,
+        topic: "Propositional Logic",
+        type: "single",
+        prompt: "In Slide Exercise 1, KB contains { R1: P∧Q∧R⇒S, R2: U⇒R, R3: G∧U⇒P, R4: H⇒Q, R5: H, R6: G, R7: U }. Can S be proven?",
+        options: [
+          "Yes, S is derived as a logical consequence via resolution refutation.",
+          "No, because U is not satisfied.",
+          "No, because S has no implications.",
+          "Undefined."
+        ],
+        answer: 0,
+        explanation: "H gives Q (R4,R5); G and U give P (R3,R6,R7); U gives R (R2,R7). P, Q, and R together trigger R1 to yield S."
+      },
+      {
+        id: 40,
+        topic: "Propositional Logic",
+        type: "single",
+        prompt: "In automated reasoning, why is avoiding random clause selection crucial during resolution?",
+        options: [
+          "Random selection causes a combinatorial explosion of redundant resolvent clauses.",
+          "Random selection violates the soundness theorem.",
+          "Random selection invalidates De Morgan's laws.",
+          "Random clauses cannot be represented in binary memory."
+        ],
+        answer: 0,
+        explanation: "Without strategies like Set of Support or Unit Preference, resolution generates thousands of useless clauses."
+      },
+
+      // -------------------------------------------------------------
+      // TOPIC 2: FIRST-ORDER LOGIC (FOL) (40 QUESTIONS)
+      // -------------------------------------------------------------
+      {
+        id: 41,
+        topic: "First-Order Logic",
+        type: "single",
+        prompt: "What major ontological expressiveness does First-Order Logic add over Propositional Logic?",
+        options: [
+          "Objects, relations (predicates), functions, and quantifiers (∀, ∃).",
+          "Continuous quantum probability matrices.",
+          "Subjective fuzzy sentiment weights.",
+          "Unrestricted infinite truth values between 0 and 1."
+        ],
+        answer: 0,
+        explanation: "FOL explicitly models individual objects, relations between them, functions, and universal/existential quantifiers."
+      },
+      {
+        id: 42,
+        topic: "First-Order Logic",
+        type: "single",
+        prompt: "In First-Order Logic syntax, what is the role of a 'Predicate'?",
+        options: [
+          "To express a property of an object or a relationship between objects.",
+          "To serve as a constant identifier like 'John' or 'Paris'.",
+          "To map arguments to another object (like 'motherOf').",
+          "To represent a logical connective such as ∧ or ⇒."
+        ],
+        answer: 0,
+        explanation: "Predicates evaluate to True or False based on properties or relationships (e.g., Loves(x, y), Student(x))."
+      },
+      {
+        id: 43,
+        topic: "First-Order Logic",
+        type: "single",
+        prompt: "What is the key functional difference between a 'Function' symbol and a 'Predicate' symbol in FOL?",
+        options: [
+          "A function returns an object/term; a predicate evaluates to a truth value (True/False).",
+          "A predicate returns an object; a function returns a truth value.",
+          "Functions can only have zero arguments.",
+          "Predicates can only be applied to numbers."
+        ],
+        answer: 0,
+        explanation: "A function (e.g., husband(Hoa)) refers to an object in the domain, whereas a predicate (e.g., Happy(Hoa)) yields True/False."
+      },
+      {
+        id: 44,
+        topic: "First-Order Logic",
+        type: "single",
+        prompt: "How is the statement 'All elephants are gray' correctly formalized in First-Order Logic?",
+        options: [
+          "∀x ( Elephant(x) → Color(x, Gray) )",
+          "∀x ( Elephant(x) ∧ Color(x, Gray) )",
+          "∃x ( Elephant(x) → Color(x, Gray) )",
+          "Color(Elephant, Gray)"
+        ],
+        answer: 0,
+        explanation: "The universal quantifier ∀ typically pairs with implication (→): 'For all x, if x is an elephant, then x is gray'."
+      },
+      {
+        id: 45,
+        topic: "First-Order Logic",
+        type: "single",
+        prompt: "Why is '∀x (Elephant(x) ∧ Color(x, Gray))' an INCORRECT translation of 'All elephants are gray'?",
+        options: [
+          "Because it asserts that every object in the entire universe is both an elephant and gray.",
+          "Because ∧ cannot be used with ∀ in FOL.",
+          "Because elephants are not always gray.",
+          "Because Color is a function, not a predicate."
+        ],
+        answer: 0,
+        explanation: "Using ∧ with ∀ asserts that everything in the universe is an elephant and gray, which is absurdly over-restrictive."
+      },
+      {
+        id: 46,
+        topic: "First-Order Logic",
+        type: "single",
+        prompt: "How is the statement 'There exists a student in room 301' correctly translated into FOL?",
+        options: [
+          "∃x ( Student(x) ∧ InRoom(x, Room301) )",
+          "∃x ( Student(x) → InRoom(x, Room301) )",
+          "∀x ( Student(x) ∧ InRoom(x, Room301) )",
+          "Student(Room301)"
+        ],
+        answer: 0,
+        explanation: "Existential quantifier ∃ naturally pairs with conjunction (∧): 'There is an x that is both a student and in room 301'."
+      },
+      {
+        id: 47,
+        topic: "First-Order Logic",
+        type: "single",
+        prompt: "According to quantifier duality (De Morgan for quantifiers), ¬(∀x P(x)) is logically equivalent to:",
+        options: [
+          "∃x (¬P(x))",
+          "∀x (¬P(x))",
+          "¬∃x P(x)",
+          "∃x P(x)"
+        ],
+        answer: 0,
+        explanation: "'Not all x are P' is identical to 'There exists at least one x that is NOT P': ¬∀x P(x) ≡ ∃x ¬P(x)."
+      },
+      {
+        id: 48,
+        topic: "First-Order Logic",
+        type: "single",
+        prompt: "According to quantifier duality, what is ¬(∃x P(x)) equivalent to?",
+        options: [
+          "∀x (¬P(x))",
+          "∃x (¬P(x))",
+          "∀x P(x)",
+          "¬∀x ¬P(x)"
+        ],
+        answer: 0,
+        explanation: "'There does not exist an x that is P' means 'For all x, x is not P': ¬∃x P(x) ≡ ∀x ¬P(x)."
+      },
+      {
+        id: 49,
+        topic: "First-Order Logic",
+        type: "single",
+        prompt: "What is 'Skolemization' in the conversion of First-Order Logic formulas to CNF?",
+        options: [
+          "The process of eliminating existential quantifiers (∃) by substituting constants or Skolem functions.",
+          "The process of translating English phrases into Prolog clauses.",
+          "The elimination of all universal quantifiers by setting variables to zero.",
+          "A method of sorting literals by string length."
+        ],
+        answer: 0,
+        explanation: "Skolemization replaces existentially quantified variables with a Skolem constant or a Skolem function of governing universal variables."
+      },
+      {
+        id: 50,
+        topic: "First-Order Logic",
+        type: "single",
+        prompt: "In the formula ∀x ∃y Q(x, y), why must y be replaced with a Skolem function f(x) rather than a simple Skolem constant C?",
+        options: [
+          "Because the choice of y depends directly on the universally quantified variable x.",
+          "Because constants are not permitted in FOL.",
+          "Because Q is a binary predicate.",
+          "Because f is an arithmetic function."
+        ],
+        answer: 0,
+        explanation: "When an existential quantifier ∃y is inside the scope of a universal quantifier ∀x, y depends on x, requiring f(x)."
+      },
+      {
+        id: 51,
+        topic: "First-Order Logic",
+        type: "single",
+        prompt: "What is the Universal Instantiation rule in First-Order Logic?",
+        options: [
+          "From ∀x P(x), one can infer P[x/t] where t is any ground term.",
+          "From P(c), one can infer ∀x P(x).",
+          "From ∃x P(x), one can infer P(x).",
+          "All universal variables must be initialized to null."
+        ],
+        answer: 0,
+        explanation: "Universal Instantiation permits replacing a universally quantified variable with any specific term t: ∀x P(x) ⊢ P[x/t]."
+      },
+      {
+        id: 52,
+        topic: "First-Order Logic",
+        type: "single",
+        prompt: "What is the primary role of Unification (substitution θ) in the General Resolution rule for FOL?",
+        options: [
+          "Finding a variable substitution that makes two atomic formulas identical so their complementary literals cancel.",
+          "Converting decimal numerals into floating-point binary.",
+          "Translating predicate logic into English grammar.",
+          "Eliminating the need for refutation proofs."
+        ],
+        answer: 0,
+        explanation: "Unification finds a most general unifier (MGU) θ such that Pθ = Qθ, allowing resolution between complementary literals."
+      },
+      {
+        id: 53,
+        topic: "First-Order Logic",
+        type: "single",
+        prompt: "Given clause 1: Hear(x, Music) ∨ Play(x, Tennis) and clause 2: ¬Play(An, y) ∨ Study(An). What substitution θ allows resolution?",
+        options: [
+          "θ = { x / An, y / Tennis }",
+          "θ = { x / Music, y / An }",
+          "θ = { x / y }",
+          "No substitution is possible"
+        ],
+        answer: 0,
+        explanation: "Matching Play(x, Tennis) with Play(An, y) requires x/An and y/Tennis, yielding Hear(An, Music) ∨ Study(An)."
+      },
+      {
+        id: 54,
+        topic: "First-Order Logic",
+        type: "single",
+        prompt: "In the famous 'Did Curiosity kill Tuna the cat?' puzzle from the slide, who is Tuna?",
+        options: [
+          "A cat, and since all cats are animals, Tuna is an animal.",
+          "A dog owned by Jack.",
+          "An animal lover who refuses to harm pets.",
+          "A fictional robotic pet in a smart home."
+        ],
+        answer: 0,
+        explanation: "Tuna is explicitly defined: Cat(Tuna), and ∀z (Cat(z) → Animal(z)), so Tuna is an animal."
+      },
+      {
+        id: 55,
+        topic: "First-Order Logic",
+        type: "single",
+        prompt: "In the Tuna puzzle, why is Jack proven INNOCENT of killing Tuna?",
+        options: [
+          "Jack owns a dog, so Jack is an animal lover, and animal lovers never kill any animal.",
+          "Jack was not home when Tuna died.",
+          "Jack has an alibi provided by Curiosity.",
+          "Curiosity confessed to the crime."
+        ],
+        answer: 0,
+        explanation: "Owns(Jack, D) ∧ Dog(D) ⇒ AnimalLover(Jack). Since AnimalLover(w) ⇒ ¬Kills(w, y), Jack cannot be the killer. Thus Curiosity must be the killer."
+      },
+      {
+        id: 56,
+        topic: "First-Order Logic",
+        type: "single",
+        prompt: "Which logic programming language is directly based on First-Order Horn clause logic and SLD resolution?",
+        options: [
+          "Prolog",
+          "Java",
+          "Fortran",
+          "COBOL"
+        ],
+        answer: 0,
+        explanation: "Prolog (Programming in Logic) is based directly on first-order Horn clauses and unification resolution."
+      },
+      {
+        id: 57,
+        topic: "First-Order Logic",
+        type: "single",
+        prompt: "In modern AI and the Semantic Web, Description Logics and Web Ontology Language (OWL) are decidable fragments of:",
+        options: [
+          "First-Order Logic",
+          "Propositional Boolean Logic only",
+          "Non-deterministic Turing Machines",
+          "Linear regression matrix calculus"
+        ],
+        answer: 0,
+        explanation: "OWL and description logics are formal knowledge representation languages founded on decidable subsets of First-Order Logic."
+      },
+      {
+        id: 58,
+        topic: "First-Order Logic",
+        type: "single",
+        prompt: "Formal verification of security protocols and distributed algorithms relies on First-Order Logic theorem provers because FOL:",
+        options: [
+          "Can verify parameterized systems with arbitrarily many participants and unbounded keys.",
+          "Does not require formal mathematical proofs.",
+          "Runs faster than simple Boolean circuits.",
+          "Eliminates network latency."
+        ],
+        answer: 0,
+        explanation: "FOL allows quantifying over arbitrary entities (participants, messages, keys), enabling general proofs of correctness."
+      },
+      {
+        id: 59,
+        topic: "First-Order Logic",
+        type: "single",
+        prompt: "Translate: 'Every hardworking student achieves high marks'. Let S(x): Student, H(x): Hardworking, M(x): High marks.",
+        options: [
+          "∀x ( (S(x) ∧ H(x)) → M(x) )",
+          "∀x ( S(x) ∧ H(x) ∧ M(x) )",
+          "∃x ( (S(x) ∧ H(x)) → M(x) )",
+          "∀x ( S(x) → (H(x) ∧ M(x)) )"
+        ],
+        answer: 0,
+        explanation: "For any person x, IF x is a student AND hardworking, THEN x achieves high marks."
+      },
+      {
+        id: 60,
+        topic: "First-Order Logic",
+        type: "single",
+        prompt: "Translate: 'Not everyone loves everyone'. Let L(x, y) denote 'x loves y'.",
+        options: [
+          "¬∀x ∀y L(x, y)",
+          "∀x ¬∀y L(x, y)",
+          "¬∃x ∃y L(x, y)",
+          "∀x ∀y ¬L(x, y)"
+        ],
+        answer: 0,
+        explanation: "'It is not the case that for all x and all y, x loves y' is ¬∀x ∀y L(x, y)."
+      },
+      {
+        id: 61,
+        topic: "First-Order Logic",
+        type: "single",
+        prompt: "What is an 'atomic sentence' (or ground atom) in First-Order Logic?",
+        options: [
+          "A predicate symbol applied to a tuple of terms, with no logical connectives.",
+          "A formula containing only universal quantifiers.",
+          "A clause with exactly 10 literals.",
+          "An empty clause □."
+        ],
+        answer: 0,
+        explanation: "An atomic sentence is formed by a predicate symbol applied to terms: Predicate(term1, term2, ...)."
+      },
+      {
+        id: 62,
+        topic: "First-Order Logic",
+        type: "single",
+        prompt: "In Slide Exercise: 'Father(nam, lan)' and 'Father(X, Y) ⇒ Child(Y, X)'. What is Child(lan, nam)?",
+        options: [
+          "A valid logical consequence derived via Universal Instantiation and Modus Ponens with θ = {X/nam, Y/lan}.",
+          "False, because gender is undefined.",
+          "An invalid inference.",
+          "A contradiction."
+        ],
+        answer: 0,
+        explanation: "Unifying {X/nam, Y/lan} with Father(X, Y) ⇒ Child(Y, X) directly yields Child(lan, nam)."
+      },
+      {
+        id: 63,
+        topic: "First-Order Logic",
+        type: "single",
+        prompt: "When standardizing variables apart before resolution, why do we rename variables in distinct clauses (e.g., C1(x) and C2(x))?",
+        options: [
+          "To avoid unintended variable name clashes since quantifiers in different clauses are independent.",
+          "Because variables can only be used once in the entire program.",
+          "To convert universal variables into Skolem functions.",
+          "To make the formulas longer for compilers."
+        ],
+        answer: 0,
+        explanation: "Quantifier scopes in separate clauses are disjoint; renaming prevents false variable sharing during unification."
+      },
+      {
+        id: 64,
+        topic: "First-Order Logic",
+        type: "single",
+        prompt: "In the Slide Library Exercise: ∀x(Student(x) → CanBorrow(x)), ∀x(CanBorrow(x) ∧ HasCard(x) → Borrows(x, BookA)), Student(lan), HasCard(lan). Does Borrows(lan, BookA) follow?",
+        options: [
+          "Yes, it is conclusively proven via refutation resolution.",
+          "No, because the library has no books.",
+          "No, HasCard is not sufficient.",
+          "Cannot be determined without a date."
+        ],
+        answer: 0,
+        explanation: "Student(lan) gives CanBorrow(lan). CanBorrow(lan) and HasCard(lan) satisfy the second rule to deduce Borrows(lan, BookA)."
+      },
+      {
+        id: 65,
+        topic: "First-Order Logic",
+        type: "single",
+        prompt: "What is the result of applying De Morgan's quantifier law to ¬(∃x ∀y Loves(x, y))?",
+        options: [
+          "∀x ∃y ¬Loves(x, y)",
+          "∃x ∀y ¬Loves(x, y)",
+          "∀x ∀y ¬Loves(x, y)",
+          "¬∀x ¬∃y Loves(x, y)"
+        ],
+        answer: 0,
+        explanation: "Pushing negation across quantifiers inverts each quantifier: ¬∃x becomes ∀x, and ¬∀y becomes ∃y¬."
+      },
+      // First-Order Logic - True/False, Fill-in & Matching (66 - 80)
+      {
+        id: 66,
+        topic: "First-Order Logic",
+        type: "tf",
+        prompt: "True or False: In First-Order Logic, a function symbol such as 'mother(John)' evaluates to a truth value (True or False).",
+        options: ["True", "False"],
+        answer: 1,
+        explanation: "False! A function symbol refers to an individual/object in the domain, not a Boolean truth value."
+      },
+      {
+        id: 67,
+        topic: "First-Order Logic",
+        type: "tf",
+        prompt: "True or False: Universal Instantiation allows substituting any arbitrary constant for a variable bound by an existential quantifier (∃).",
+        options: ["True", "False"],
+        answer: 1,
+        explanation: "False! Universal Instantiation applies exclusively to universal quantifiers (∀), NOT existential quantifiers."
+      },
+      {
+        id: 68,
+        topic: "First-Order Logic",
+        type: "tf",
+        prompt: "True or False: In First-Order Logic resolution, the empty clause □ represents an unsatisfiable contradiction just as in Propositional Logic.",
+        options: ["True", "False"],
+        answer: 0,
+        explanation: "True! In both logics, deriving □ proves that the set of clauses is unsatisfiable."
+      },
+      {
+        id: 69,
+        topic: "First-Order Logic",
+        type: "tf",
+        prompt: "True or False: The formula ∀x P(x) logically entails ∃x P(x) assuming a non-empty domain of discourse.",
+        options: ["True", "False"],
+        answer: 0,
+        explanation: "True! In standard First-Order Logic with a non-empty universe, if a property holds for all objects, it holds for at least one."
+      },
+      {
+        id: 70,
+        topic: "First-Order Logic",
+        type: "tf",
+        prompt: "True or False: A ground clause is a clause that contains no variables whatsoever.",
+        options: ["True", "False"],
+        answer: 0,
+        explanation: "True! By definition, a ground term/clause contains zero variable symbols."
+      },
+      {
+        id: 71,
+        topic: "First-Order Logic",
+        type: "fill",
+        prompt: "Fill in the blank: The logical symbol '∀' is called the ______ quantifier.",
+        accepted: ["universal", "pho dung", "voi moi"],
+        explanation: "∀ is the universal quantifier."
+      },
+      {
+        id: 72,
+        topic: "First-Order Logic",
+        type: "fill",
+        prompt: "Fill in the blank: The logical symbol '∃' is called the ______ quantifier.",
+        accepted: ["existential", "ton tai"],
+        explanation: "∃ is the existential quantifier."
+      },
+      {
+        id: 73,
+        topic: "First-Order Logic",
+        type: "fill",
+        prompt: "Fill in the blank: The algorithm that finds a variable substitution θ to make two logic expressions identical is called ______.",
+        accepted: ["unification", "hop nhat", "unifier"],
+        explanation: "Unification finds a unifier θ that makes two literals identical."
+      },
+      {
+        id: 74,
+        topic: "First-Order Logic",
+        type: "fill",
+        prompt: "Fill in the blank: Replacing an existentially quantified variable with a function of universally quantified variables is called ______ization.",
+        accepted: ["skolem", "skolemization", "skolem hoa"],
+        explanation: "This technique is known as Skolemization (named after Thoralf Skolem)."
+      },
+      {
+        id: 75,
+        topic: "First-Order Logic",
+        type: "fill",
+        prompt: "Fill in the blank: In the slide puzzle 'Who killed Tuna?', the culprit proven by refutation resolution is ______.",
+        accepted: ["curiosity"],
+        explanation: "Curiosity is proven to have killed Tuna."
+      },
+      {
+        id: 76,
+        topic: "First-Order Logic",
+        type: "matching",
+        prompt: "Match each First-Order Logic component with its syntactic example from the lecture slides:",
+        pairs: [
+          { item: "Constant symbol", match: "An, Hoa, Tuna" },
+          { item: "Variable symbol", match: "x, y, z" },
+          { item: "Predicate symbol", match: "Student, Loves, Dog" },
+          { item: "Function symbol", match: "mother(x), husband(Hoa)" }
+        ],
+        explanation: "Syntactic categories in FOL as introduced in Chapter 3.2 Slide 02."
+      },
+      {
+        id: 77,
+        topic: "First-Order Logic",
+        type: "matching",
+        prompt: "Match each quantified expression with its natural English interpretation:",
+        pairs: [
+          { item: "∀x (Student(x) → Smart(x))", match: "Every student is smart" },
+          { item: "∃x (Student(x) ∧ Smart(x))", match: "Some student is smart" },
+          { item: "¬∃x (Student(x) ∧ Smart(x))", match: "No student is smart" },
+          { item: "∀x ¬Smart(x)", match: "Nobody is smart" }
+        ],
+        explanation: "Standard pairings of quantifiers and connectives."
+      },
+      {
+        id: 78,
+        topic: "First-Order Logic",
+        type: "single",
+        prompt: "When converting ∀x (P(x) → ∃y Q(x, y)) into CNF, what is the resulting single clause?",
+        options: [
+          "¬P(x) ∨ Q(x, f(x))",
+          "P(x) ∧ Q(x, y)",
+          "¬P(x) ∧ Q(x, C)",
+          "P(x) ∨ ¬Q(x, f(x))"
+        ],
+        answer: 0,
+        explanation: "Slide 12: Eliminate → gives ¬P(x) ∨ ∃y Q(x, y); replace ∃y with Skolem function f(x) yielding ¬P(x) ∨ Q(x, f(x))."
+      },
+      {
+        id: 79,
+        topic: "First-Order Logic",
+        type: "single",
+        prompt: "Which of the following describes the 'Soundness' (Tính đúng đắn) property of the resolution refutation procedure in FOL?",
+        options: [
+          "If an empty clause □ is derived from KB ∪ {¬α}, then KB logically entails α in reality.",
+          "If α is true, the algorithm is guaranteed to terminate within 10 milliseconds.",
+          "The algorithm will find all possible truths simultaneously.",
+          "Every clause in the KB has at least one positive literal."
+        ],
+        answer: 0,
+        explanation: "Soundness guarantees that whatever is derived as a consequence is genuinely true in all models (truth-preserving)."
+      },
+      {
+        id: 80,
+        topic: "First-Order Logic",
+        type: "single",
+        prompt: "Which property guarantees that if a set of FOL clauses is unsatisfiable, the resolution refutation procedure will eventually derive an empty clause □?",
+        options: [
+          "Refutation Completeness",
+          "Soundness",
+          "Decidability of Full First-Order Logic",
+          "Commutativity"
+        ],
+        answer: 0,
+        explanation: "Refutation completeness guarantees that if a contradiction exists, resolution will be able to derive □ (Robinson's theorem)."
+      }
+    ];
+
+    /* =====================================================================
+       APPLICATION STATE & CONTROLLER
+    ===================================================================== */
+    const MAX_ATTEMPTS = 2;
+    const STORAGE_KEY_ATTEMPTS = "ai_logic_exam_attempts_count";
+    const STORAGE_KEY_HISTORY = "ai_logic_exam_user_history";
+
+    const state = {
+      studentName: "",
+      studentId: "",
+      currentQuestionIdx: 0,
+      activeExamQuestions: [], // Exactly 40 questions (20 Prop, 20 FOL)
+      userAnswers: {},         // questionId -> response
+      flaggedQuestions: new Set(),
+      violationCount: 0,
+      isExamRunning: false,
+      isExamSubmitted: false,
+      rawScore: 0,
+      deductionRate: 0,
+      finalScore: 0,
+      modalReason: ""
+    };
+
+    // DOM Elements
+    const screenStart = document.getElementById("screen-start");
+    const screenExam = document.getElementById("screen-exam");
+    const screenResult = document.getElementById("screen-result");
+    const violationModal = document.getElementById("violation-modal");
+    const violationReasonEl = document.getElementById("violation-reason");
+    const violationCountBadge = document.getElementById("violation-count-badge");
+    const resumeExamBtn = document.getElementById("resume-exam-btn");
+
+    const startForm = document.getElementById("start-form");
+    const inputStudentName = document.getElementById("input-student-name");
+    const inputStudentId = document.getElementById("input-student-id");
+    const attemptInfoBadge = document.getElementById("attempt-info-badge");
+    const btnStartExam = document.getElementById("btn-start-exam");
+    const deviceLockedAlert = document.getElementById("device-locked-alert");
+
+    const examStatsBar = document.getElementById("exam-stats-bar");
+    const displayStudentName = document.getElementById("display-student-name");
+    const displayViolationCount = document.getElementById("display-violation-count");
+    const displayProgressRatio = document.getElementById("display-progress-ratio");
+
+    const questionIndexTag = document.getElementById("question-index-tag");
+    const questionTopicTag = document.getElementById("question-topic-tag");
+    const questionTypeTag = document.getElementById("question-type-tag");
+    const questionPrompt = document.getElementById("question-prompt");
+    const interactiveContainer = document.getElementById("question-interactive-container");
+    const questionMatrixGrid = document.getElementById("question-matrix-grid");
+
+    const btnPrevQ = document.getElementById("btn-prev-q");
+    const btnNextQ = document.getElementById("btn-next-q");
+    const btnFlagQ = document.getElementById("btn-flag-q");
+    const btnSubmitExam = document.getElementById("btn-submit-exam");
+
+    const statRawScore = document.getElementById("stat-raw-score");
+    const statRawPct = document.getElementById("stat-raw-pct");
+    const statViolations = document.getElementById("stat-violations");
+    const statDeduction = document.getElementById("stat-deduction");
+    const statFinalScore = document.getElementById("stat-final-score");
+    const resultStudentHeader = document.getElementById("result-student-header");
+    const btnRetryExam = document.getElementById("btn-retry-exam");
+    const retryRemainingBadge = document.getElementById("retry-remaining-badge");
+    const btnToggleReview = document.getElementById("btn-toggle-review");
+    const reviewSection = document.getElementById("review-section");
+    const reviewQuestionsList = document.getElementById("review-questions-list");
+
+    // Initialize Attempts
+    function getStoredAttempts() {
+      const val = localStorage.getItem(STORAGE_KEY_ATTEMPTS);
+      return val ? parseInt(val, 10) : 0;
+    }
+
+    function updateAttemptDisplay() {
+      const currentAttempts = getStoredAttempts();
+      attemptInfoBadge.textContent = `${currentAttempts} / ${MAX_ATTEMPTS}`;
+      const remaining = Math.max(0, MAX_ATTEMPTS - currentAttempts);
+      retryRemainingBadge.textContent = remaining;
+
+      if (currentAttempts >= MAX_ATTEMPTS) {
+        btnStartExam.disabled = true;
+        btnStartExam.classList.add("opacity-40", "cursor-not-allowed");
+        deviceLockedAlert.classList.remove("hidden");
+        btnRetryExam.disabled = true;
+      } else {
+        btnStartExam.disabled = false;
+        btnStartExam.classList.remove("opacity-40", "cursor-not-allowed");
+        deviceLockedAlert.classList.add("hidden");
+      }
+    }
+
+    // Shuffle Array Utility (Fisher-Yates)
+    function shuffleArray(arr) {
+      const copy = [...arr];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    // Build the 40 Questions pool: 20 Prop Logic + 20 FOL
+    function generateExamPool() {
+      const propPool = QUESTION_BANK.filter(q => q.topic === "Propositional Logic");
+      const folPool = QUESTION_BANK.filter(q => q.topic === "First-Order Logic");
+
+      const selectedProp = shuffleArray(propPool).slice(0, 20);
+      const selectedFol = shuffleArray(folPool).slice(0, 20);
+
+      // Combine and shuffle order
+      return shuffleArray([...selectedProp, ...selectedFol]);
+    }
+
+    /* =====================================================================
+       FULLSCREEN & SECURITY PROTOCOL
+    ===================================================================== */
+    async function requestFullscreenLock() {
+      try {
+        const docEl = document.documentElement;
+        if (docEl.requestFullscreen) {
+          await docEl.requestFullscreen();
+        } else if (docEl.webkitRequestFullscreen) {
+          await docEl.webkitRequestFullscreen();
+        } else if (docEl.msRequestFullscreen) {
+          await docEl.msRequestFullscreen();
+        }
+      } catch (err) {
+        console.warn("Fullscreen request error:", err);
+      }
+    }
+
+    function recordViolation(reason) {
+      if (!state.isExamRunning || state.isExamSubmitted) return;
+
+      state.violationCount++;
+      displayViolationCount.textContent = state.violationCount;
+      violationCountBadge.textContent = state.violationCount;
+      violationReasonEl.textContent = reason;
+
+      // Show warning modal
+      violationModal.classList.remove("hidden");
+    }
+
+    // Trap Keyboard combos and special keys
+    window.addEventListener("keydown", (e) => {
+      if (!state.isExamRunning || state.isExamSubmitted) return;
+
+      // Disable F1 through F12
+      if (e.key && e.key.startsWith("F") && !isNaN(e.key.substring(1))) {
+        e.preventDefault();
+        recordViolation(`Phát hiện phím chức năng cấm (${e.key}).`);
+        return;
+      }
+
+      // Esc key
+      if (e.key === "Escape") {
+        e.preventDefault();
+        recordViolation("Phát hiện nhấn phím Esc để thoát bài thi.");
+        return;
+      }
+
+      // Windows Meta key / Alt key combos
+      if (e.metaKey || e.altKey) {
+        e.preventDefault();
+        recordViolation("Phát hiện phím Windows / Alt để chuyển ứng dụng.");
+        return;
+      }
+
+      // Prohibit Ctrl+C, Ctrl+V, Ctrl+U, Ctrl+S, Ctrl+P, Ctrl+N, Ctrl+T, Ctrl+W, Ctrl+R
+      if (e.ctrlKey || e.metaKey) {
+        const key = e.key.toLowerCase();
+        if (["c", "v", "u", "s", "p", "n", "t", "w", "r", "a", "x"].includes(key)) {
+          e.preventDefault();
+          recordViolation(`Phát hiện tổ hợp phím cấm (Ctrl + ${key.toUpperCase()}).`);
+          return;
+        }
+      }
+    });
+
+    // Disable Right Click contextmenu
+    window.addEventListener("contextmenu", (e) => {
+      if (state.isExamRunning) {
+        e.preventDefault();
+        recordViolation("Nghiêm cấm click chuột phải trong thời gian làm bài.");
+      }
+    });
+
+    // Detect Tab Switch / Loss of Focus / Window Minimize
+    window.addEventListener("blur", () => {
+      if (state.isExamRunning && !state.isExamSubmitted) {
+        recordViolation("Phát hiện mất tiêu điểm màn hình hoặc chuyển sang tab/cửa sổ khác!");
+      }
+    });
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden && state.isExamRunning && !state.isExamSubmitted) {
+        recordViolation("Phát hiện ẩn trình duyệt hoặc mở tab khác!");
+      }
+    });
+
+    // Fullscreen exit detection
+    document.addEventListener("fullscreenchange", () => {
+      if (!document.fullscreenElement && state.isExamRunning && !state.isExamSubmitted) {
+        recordViolation("Phát hiện thoát chế độ Toàn Màn Hình (Fullscreen)!");
+      }
+    });
+
+    // Resume Button
+    resumeExamBtn.addEventListener("click", async () => {
+      violationModal.classList.add("hidden");
+      await requestFullscreenLock();
+    });
+
+    /* =====================================================================
+       EXAM FLOW CONTROLLER
+    ===================================================================== */
+    startForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const currentAttempts = getStoredAttempts();
+      if (currentAttempts >= MAX_ATTEMPTS) {
+        alert("Thiết bị này đã sử dụng hết 2 lượt làm bài!");
+        return;
+      }
+
+      const name = inputStudentName.value.trim();
+      const id = inputStudentId.value.trim();
+      if (!name || !id) return;
+
+      state.studentName = name;
+      state.studentId = id;
+      state.currentQuestionIdx = 0;
+      state.userAnswers = {};
+      state.flaggedQuestions = new Set();
+      state.violationCount = 0;
+      state.isExamRunning = true;
+      state.isExamSubmitted = false;
+      state.activeExamQuestions = generateExamPool();
+
+      // Display student header
+      displayStudentName.textContent = state.studentName;
+      displayViolationCount.textContent = "0";
+
+      // Enter fullscreen
+      await requestFullscreenLock();
+
+      // Switch screen
+      screenStart.classList.add("hidden");
+      screenResult.classList.add("hidden");
+      screenExam.classList.remove("hidden");
+      examStatsBar.classList.remove("hidden");
+
+      renderQuestionMatrix();
+      renderCurrentQuestion();
+    });
+
+    function renderQuestionMatrix() {
+      questionMatrixGrid.innerHTML = "";
+      state.activeExamQuestions.forEach((q, idx) => {
+        const btn = document.createElement("button");
+        btn.id = `matrix-btn-${idx}`;
+        btn.className = getMatrixButtonClass(idx);
+        btn.textContent = idx + 1;
+        btn.addEventListener("click", () => {
+          state.currentQuestionIdx = idx;
+          renderCurrentQuestion();
+        });
+        questionMatrixGrid.appendChild(btn);
+      });
+      updateProgressRatio();
+    }
+
+    function getMatrixButtonClass(idx) {
+      const q = state.activeExamQuestions[idx];
+      const isAnswered = isQuestionAnswered(q.id);
+      const isCurrent = state.currentQuestionIdx === idx;
+      const isFlagged = state.flaggedQuestions.has(q.id);
+
+      let classes = "h-9 rounded-lg font-mono-code text-xs font-semibold flex items-center justify-center transition border ";
+
+      if (isCurrent) {
+        classes += "ring-2 ring-white border-white ";
+      }
+
+      if (isFlagged) {
+        classes += "bg-amber-600/80 text-white border-amber-400";
+      } else if (isAnswered) {
+        classes += "bg-indigo-600 text-white border-indigo-400";
+      } else {
+        classes += "bg-slate-900/90 text-slate-300 border-slate-700 hover:border-slate-500";
+      }
+      return classes;
+    }
+
+    function updateMatrixButtons() {
+      state.activeExamQuestions.forEach((q, idx) => {
+        const btn = document.getElementById(`matrix-btn-${idx}`);
+        if (btn) btn.className = getMatrixButtonClass(idx);
+      });
+      updateProgressRatio();
+    }
+
+    function isQuestionAnswered(questionId) {
+      const val = state.userAnswers[questionId];
+      if (val === undefined || val === null) return false;
+      if (typeof val === "string") return val.trim().length > 0;
+      if (typeof val === "object") {
+        // Matching type object: must match all items
+        const q = state.activeExamQuestions.find(item => item.id === questionId);
+        if (q && q.type === "matching") {
+          return Object.keys(val).length === q.pairs.length;
+        }
+      }
+      return true;
+    }
+
+    function updateProgressRatio() {
+      let count = 0;
+      state.activeExamQuestions.forEach(q => {
+        if (isQuestionAnswered(q.id)) count++;
+      });
+      displayProgressRatio.textContent = `${count}/${state.activeExamQuestions.length}`;
+    }
+
+    function renderCurrentQuestion() {
+      const q = state.activeExamQuestions[state.currentQuestionIdx];
+      if (!q) return;
+
+      // Meta info
+      questionIndexTag.textContent = `Question ${(state.currentQuestionIdx + 1).toString().padStart(2, "0")}/40`;
+      questionTopicTag.textContent = q.topic;
+      questionTypeTag.textContent = q.type.toUpperCase();
+      questionPrompt.textContent = q.prompt;
+
+      // Flag button style
+      if (state.flaggedQuestions.has(q.id)) {
+        btnFlagQ.classList.add("bg-amber-500/30", "border-amber-400");
+      } else {
+        btnFlagQ.classList.remove("bg-amber-500/30", "border-amber-400");
+      }
+
+      // Prev / Next button states
+      btnPrevQ.disabled = state.currentQuestionIdx === 0;
+      btnNextQ.disabled = state.currentQuestionIdx === state.activeExamQuestions.length - 1;
+
+      // Render Interactive based on question type
+      interactiveContainer.innerHTML = "";
+
+      if (q.type === "single" || q.type === "tf") {
+        renderMultipleChoice(q);
+      } else if (q.type === "fill") {
+        renderFillIn(q);
+      } else if (q.type === "matching") {
+        renderMatching(q);
+      }
+
+      updateMatrixButtons();
+    }
+
+    function renderMultipleChoice(q) {
+      const currentAns = state.userAnswers[q.id];
+      q.options.forEach((opt, oIdx) => {
+        const optionBtn = document.createElement("button");
+        const isSelected = currentAns === oIdx;
+
+        optionBtn.className = `w-full text-left p-3.5 rounded-2xl transition border flex items-start gap-3 ${
+          isSelected
+            ? "bg-indigo-600/30 border-indigo-400 text-white shadow-lg shadow-indigo-900/30"
+            : "bg-slate-900/60 border-white/5 hover:border-indigo-500/40 text-slate-200 hover:bg-slate-850"
+        }`;
+
+        const letter = String.fromCharCode(65 + oIdx);
+        optionBtn.innerHTML = `
+          <span class="flex-shrink-0 w-6 h-6 rounded-lg text-xs font-bold flex items-center justify-center font-mono-code ${
+            isSelected ? "bg-indigo-500 text-white" : "bg-slate-800 text-slate-400"
+          }">${letter}</span>
+          <span class="text-xs sm:text-sm mt-0.5 leading-relaxed">${opt}</span>
+        `;
+
+        optionBtn.addEventListener("click", () => {
+          state.userAnswers[q.id] = oIdx;
+          renderCurrentQuestion();
+        });
+
+        interactiveContainer.appendChild(optionBtn);
+      });
+    }
+
+    function renderFillIn(q) {
+      const currentVal = state.userAnswers[q.id] || "";
+      const wrapper = document.createElement("div");
+      wrapper.className = "space-y-3";
+
+      wrapper.innerHTML = `
+        <label class="block text-xs text-slate-400">Nhập câu trả lời bằng tiếng Anh (hoặc thuật ngữ slide):</label>
+        <div class="relative">
+          <input type="text" id="fill-input-${q.id}" value="${currentVal}" placeholder="Type your answer here..."
+            class="w-full px-4 py-3 bg-slate-900/90 border border-slate-700 rounded-xl text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-mono-code transition">
+        </div>
+        <p class="text-[11px] text-slate-400">Gợi ý: Hệ thống không phân biệt hoa thường và tự động loại bỏ khoảng trắng dư thừa.</p>
+      `;
+
+      interactiveContainer.appendChild(wrapper);
+
+      const inputEl = document.getElementById(`fill-input-${q.id}`);
+      inputEl.addEventListener("input", (e) => {
+        state.userAnswers[q.id] = e.target.value;
+        updateMatrixButtons();
+      });
+    }
+
+    function renderMatching(q) {
+      const storedMap = state.userAnswers[q.id] || {};
+      const wrapper = document.createElement("div");
+      wrapper.className = "space-y-3";
+
+      // Collect target matches
+      const allTargets = q.pairs.map(p => p.match);
+
+      q.pairs.forEach((pair, pIdx) => {
+        const row = document.createElement("div");
+        row.className = "p-3 rounded-xl bg-slate-900/60 border border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-2";
+
+        const selectedMatch = storedMap[pIdx] !== undefined ? storedMap[pIdx] : "";
+
+        let optionsHtml = `<option value="">-- Choose matching definition --</option>`;
+        allTargets.forEach((tgt) => {
+          const isSelected = selectedMatch === tgt ? "selected" : "";
+          optionsHtml += `<option value="${tgt}" ${isSelected}>${tgt}</option>`;
+        });
+
+        row.innerHTML = `
+          <div class="text-xs sm:text-sm font-semibold text-indigo-300 sm:w-2/5">
+            ${pIdx + 1}. ${pair.item}
+          </div>
+          <div class="sm:w-3/5">
+            <select data-pair-idx="${pIdx}" class="matching-select w-full p-2.5 rounded-lg bg-slate-800 border border-slate-700 text-xs sm:text-sm text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+              ${optionsHtml}
+            </select>
+          </div>
+        `;
+
+        wrapper.appendChild(row);
+      });
+
+      interactiveContainer.appendChild(wrapper);
+
+      wrapper.querySelectorAll(".matching-select").forEach(sel => {
+        sel.addEventListener("change", (e) => {
+          const pIdx = e.target.getAttribute("data-pair-idx");
+          const val = e.target.value;
+          if (!state.userAnswers[q.id]) {
+            state.userAnswers[q.id] = {};
+          }
+          if (val) {
+            state.userAnswers[q.id][pIdx] = val;
+          } else {
+            delete state.userAnswers[q.id][pIdx];
+          }
+          updateMatrixButtons();
+        });
+      });
+    }
+
+    // Question Navigation Listeners
+    btnPrevQ.addEventListener("click", () => {
+      if (state.currentQuestionIdx > 0) {
+        state.currentQuestionIdx--;
+        renderCurrentQuestion();
+      }
+    });
+
+    btnNextQ.addEventListener("click", () => {
+      if (state.currentQuestionIdx < state.activeExamQuestions.length - 1) {
+        state.currentQuestionIdx++;
+        renderCurrentQuestion();
+      }
+    });
+
+    btnFlagQ.addEventListener("click", () => {
+      const q = state.activeExamQuestions[state.currentQuestionIdx];
+      if (state.flaggedQuestions.has(q.id)) {
+        state.flaggedQuestions.delete(q.id);
+      } else {
+        state.flaggedQuestions.add(q.id);
+      }
+      renderCurrentQuestion();
+    });
+
+    // Submit Exam
+    btnSubmitExam.addEventListener("click", () => {
+      let unansweredCount = 0;
+      state.activeExamQuestions.forEach(q => {
+        if (!isQuestionAnswered(q.id)) unansweredCount++;
+      });
+
+      let confirmMsg = "Bạn có chắc chắn muốn nộp bài thi?";
+      if (unansweredCount > 0) {
+        confirmMsg = `Bạn còn ${unansweredCount} câu hỏi CHƯA LÀM. Bạn có chắc chắn muốn nộp bài thi ngay không?`;
+      }
+
+      if (window.confirm(confirmMsg)) {
+        finishExam();
+      }
+    });
+
+    /* =====================================================================
+       SCORE EVALUATION & REPORTING
+    ===================================================================== */
+    function finishExam() {
+      state.isExamRunning = false;
+      state.isExamSubmitted = true;
+
+      // Increment Attempt in LocalStorage
+      const currentAttempts = getStoredAttempts();
+      const newAttempts = currentAttempts + 1;
+      localStorage.setItem(STORAGE_KEY_ATTEMPTS, newAttempts.toString());
+
+      // Calculate Raw Score
+      let correctCount = 0;
+      state.activeExamQuestions.forEach(q => {
+        const userResp = state.userAnswers[q.id];
+        if (q.type === "single" || q.type === "tf") {
+          if (userResp === q.answer) correctCount++;
+        } else if (q.type === "fill") {
+          if (userResp && typeof userResp === "string") {
+            const sanitized = userResp.trim().toLowerCase();
+            const isMatch = q.accepted.some(acc => acc.toLowerCase() === sanitized);
+            if (isMatch) correctCount++;
+          }
+        } else if (q.type === "matching") {
+          if (userResp && typeof userResp === "object") {
+            const allCorrect = q.pairs.every((pair, idx) => userResp[idx] === pair.match);
+            if (allCorrect) correctCount++;
+          }
+        }
+      });
+
+      state.rawScore = correctCount;
+      const rawPercentage = (correctCount / state.activeExamQuestions.length) * 100;
+      
+      // Violation penalty: 10% per violation (capped at 100%)
+      const penaltyRate = Math.min(100, state.violationCount * 10);
+      state.deductionRate = penaltyRate;
+
+      // Final score on scale 10: (raw% * (1 - penaltyRate/100)) * 0.1
+      const effectivePercentage = Math.max(0, rawPercentage * (1 - penaltyRate / 100));
+      state.finalScore = (effectivePercentage / 10).toFixed(2);
+
+      // Exit fullscreen safely
+      if (document.fullscreenElement) {
+        document.exitFullscreen().catch(() => {});
+      }
+
+      // Update Screen
+      screenExam.classList.add("hidden");
+      examStatsBar.classList.add("hidden");
+      screenResult.classList.remove("hidden");
+
+      renderResults();
+    }
+
+    function renderResults() {
+      resultStudentHeader.textContent = `Thí sinh: ${state.studentName} | Mã SV / Lớp: ${state.studentId}`;
+      statRawScore.textContent = `${state.rawScore}/40`;
+      statRawPct.textContent = `${((state.rawScore / 40) * 100).toFixed(1)}%`;
+      statViolations.textContent = state.violationCount;
+      statDeduction.textContent = `-${state.deductionRate}%`;
+      statFinalScore.textContent = `${state.finalScore} / 10`;
+
+      updateAttemptDisplay();
+      renderReviewSection();
+    }
+
+    function renderReviewSection() {
+      reviewQuestionsList.innerHTML = "";
+      state.activeExamQuestions.forEach((q, idx) => {
+        const userResp = state.userAnswers[q.id];
+        let isCorrect = false;
+        let userDisplay = "<span class='text-slate-500 font-italic'>Chưa trả lời</span>";
+        let correctDisplay = "";
+
+        if (q.type === "single" || q.type === "tf") {
+          isCorrect = userResp === q.answer;
+          if (userResp !== undefined) {
+            userDisplay = `<span class="${isCorrect ? 'text-emerald-400' : 'text-red-400'} font-semibold">${q.options[userResp]}</span>`;
+          }
+          correctDisplay = q.options[q.answer];
+        } else if (q.type === "fill") {
+          if (userResp && typeof userResp === "string") {
+            const sanitized = userResp.trim().toLowerCase();
+            isCorrect = q.accepted.some(acc => acc.toLowerCase() === sanitized);
+            userDisplay = `<span class="${isCorrect ? 'text-emerald-400' : 'text-red-400'} font-semibold font-mono-code">${userResp}</span>`;
+          }
+          correctDisplay = q.accepted.join(" / ");
+        } else if (q.type === "matching") {
+          if (userResp && typeof userResp === "object") {
+            isCorrect = q.pairs.every((pair, pIdx) => userResp[pIdx] === pair.match);
+            userDisplay = `<div class="text-xs space-y-1">` + q.pairs.map((p, pIdx) => {
+              const matched = userResp[pIdx] || "None";
+              const isPRight = matched === p.match;
+              return `<div class="${isPRight ? 'text-emerald-400' : 'text-red-400'}">• ${p.item} → ${matched}</div>`;
+            }).join("") + `</div>`;
+          }
+          correctDisplay = `<div class="text-xs space-y-1">` + q.pairs.map(p => `<div>• ${p.item} → ${p.match}</div>`).join("") + `</div>`;
+        }
+
+        const card = document.createElement("div");
+        card.className = `p-5 rounded-2xl glass-card-subtle border ${
+          isCorrect ? "border-emerald-500/30 bg-emerald-950/10" : "border-red-500/30 bg-red-950/10"
+        }`;
+
+        card.innerHTML = `
+          <div class="flex items-center justify-between mb-2 pb-2 border-b border-white/5">
+            <span class="text-xs font-bold ${isCorrect ? 'text-emerald-400' : 'text-red-400'}">
+              Câu ${idx + 1}: ${isCorrect ? '✓ ĐÚNG' : '✗ SAI'}
+            </span>
+            <span class="text-[11px] text-slate-400">${q.topic} • ${q.type.toUpperCase()}</span>
+          </div>
+          <p class="text-xs sm:text-sm font-semibold text-slate-100 mb-3">${q.prompt}</p>
+          <div class="text-xs space-y-2 mb-3 bg-slate-900/60 p-3 rounded-xl border border-white/5">
+            <div><span class="text-slate-400">Bạn đã chọn: </span> ${userDisplay}</div>
+            <div><span class="text-emerald-400 font-semibold">Đáp án đúng: </span> <span class="text-slate-200">${correctDisplay}</span></div>
+          </div>
+          <div class="text-[11px] text-indigo-300/90 bg-indigo-950/40 p-2.5 rounded-lg border border-indigo-800/30 leading-relaxed">
+            💡 <strong>Giải thích chi tiết:</strong> ${q.explanation}
+          </div>
+        `;
+
+        reviewQuestionsList.appendChild(card);
+      });
+    }
+
+    // Toggle Review Section
+    btnToggleReview.addEventListener("click", () => {
+      reviewSection.classList.toggle("hidden");
+      if (!reviewSection.classList.contains("hidden")) {
+        reviewSection.scrollIntoView({ behavior: "smooth" });
+      }
+    });
+
+    // Retry Exam Listener
+    btnRetryExam.addEventListener("click", () => {
+      const currentAttempts = getStoredAttempts();
+      if (currentAttempts >= MAX_ATTEMPTS) {
+        alert("Bạn đã hết lượt làm bài!");
+        return;
+      }
+      // Return to start screen
+      screenResult.classList.add("hidden");
+      reviewSection.classList.add("hidden");
+      screenStart.classList.remove("hidden");
+      updateAttemptDisplay();
+    });
+
+    // Initialization on window load
+    window.onload = function () {
+      updateAttemptDisplay();
+    };
+  </script>
+</body>
+</html>
